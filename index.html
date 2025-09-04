@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Chatbot JARVIS</title>
     <style>
-        /* Seu CSS original aqui... */
+    
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
@@ -161,14 +161,14 @@
                 });
 
                 if (response.ok) {
-                    status.textContent = "✅ Conectado ao modelo Mistral!";
+                    status.textContent = " Conectado ao modelo Mistral!";
                     status.style.color = "#4caf50";
                 } else {
-                    status.textContent = "❌ Nosso modelo está indisponível no momento";
+                    status.textContent = " Nosso modelo está indisponível no momento";
                     status.style.color = "#f44336";
                 }
             } catch (error) {
-                status.textContent = "⚠️ Erro de conexão";
+                status.textContent = "⚠ Erro de conexão";
                 status.style.color = "#f44336";
             }
         }
@@ -230,20 +230,20 @@
             userInput.value = '';
             showTypingIndicator(true);
 
-            // Primeiro tenta responder localmente
+         
             const localResponse = getLocalAnswer(message);
 
             if (localResponse) {
-                // Responde rápido, sem chamar API
+              
                 addMessage(localResponse, 'bot');
                 showTypingIndicator(false);
             } else {
-                // Se não achar local, tenta chamar a API
+               
                 try {
                     const apiResponse = await queryAPI(message);
                     addMessage(apiResponse, 'bot');
                 } catch (error) {
-                    // Se API falhar, responde com fallback
+                    //fallbavk
                     addMessage("⚠️ Desculpe, não consegui conectar ao servidor de respostas. Por favor, tente novamente mais tarde.", 'error');
                 } finally {
                     showTypingIndicator(false);
@@ -262,3 +262,4 @@
     </script>
 </body>
 </html>
+
