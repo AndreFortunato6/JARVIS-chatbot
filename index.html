@@ -3,263 +3,254 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Chatbot JARVIS</title>
+    <title>Chatbot JARVIS - Tipcar</title>
+
     <style>
-    
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+            font-family: 'Trebuchet MS', Arial, sans-serif;
             background: linear-gradient(135deg, #11bae4 0%, #d0c3e2 100%);
-            color: #333; line-height: 1.6; padding: 20px; min-height: 100vh;
-            display: flex; flex-direction: column; align-items: center;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         .container {
-            width: 100%; max-width: 800px; background: white; border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden;
-            display: flex; flex-direction: column; height: 90vh;
+            width: 100%; max-width: 800px;
+            background: white; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex; flex-direction: column;
+            height: 90vh;
         }
         header {
-            background: #4b6cb7; color: white; padding: 20px; text-align: center;
+            background: #4b6cb7;
+            color: white;
+            padding: 20px;
+            text-align: center;
             border-bottom: 1px solid #eee;
         }
         h1 {
-            font-size: 28px; margin-bottom: 5px;
-            display: flex; align-items: center; justify-content: center; gap: 10px;
+            font-size: 28px;
+            display: flex; justify-content: center;
+            gap: 10px;
         }
-        .status { font-size: 14px; opacity: 0.9; margin-top: 5px; }
+        .status {
+            font-size: 14px; opacity: 0.9; margin-top: 5px;
+        }
+        .quick-btn {
+            background: #243b7a; color: white;
+            border: none; padding: 8px 14px;
+            border-radius: 18px; cursor: pointer;
+            font-size: 14px; transition: 0.2s;
+        }
+        .quick-btn:hover { background: #1a2d5c; }
+
         .chatbox {
-            flex: 1; overflow-y: auto; padding: 20px; background: #fafafa;
+            flex: 1; overflow-y: auto;
+            padding: 20px; background: #fafafa;
             display: flex; flex-direction: column; gap: 15px;
         }
         .message {
-            max-width: 80%; padding: 12px 16px; border-radius: 18px;
-            animation: fadeIn 0.3s ease; position: relative; line-height: 1.5;
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            animation: fadeIn 0.3s ease;
         }
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {opacity:0; transform:translateY(10px);}
+            to {opacity:1; transform:translateY(0);}
         }
-        .user-message { align-self: flex-end; background: #4b6cb7; color: white; border-bottom-right-radius: 5px; }
-        .bot-message { align-self: flex-start; background: #e8ebf0; color: #333; border-bottom-left-radius: 5px; }
-        .system-message { align-self: center; background: #ffd166; color: #333; text-align: center; font-size: 14px; max-width: 90%; }
-        .error-message { align-self: center; background: #ff6b6b; color: white; text-align: center; }
+        .user-message {
+            align-self: flex-end; background: #4b6cb7; color: white;
+            border-bottom-right-radius: 5px;
+        }
+        .bot-message {
+            align-self: flex-start; background: #e8ebf0; color: #333;
+            border-bottom-left-radius: 5px;
+        }
+        .system-message {
+            align-self: center; background: #ffd166;
+            padding: 10px;
+            border-radius: 10px;
+            color: #333; text-align: center;
+        }
         .input-area {
-            display: flex; padding: 15px; background: white; border-top: 1px solid #eee; gap: 10px;
+            display: flex; padding: 15px;
+            background: white; border-top: 1px solid #eee;
+            gap: 10px;
         }
         #userInput {
-            flex: 1; padding: 12px 16px; border: 1px solid #ddd; border-radius: 24px;
-            font-size: 16px; outline: none; transition: border-color 0.3s;
+            flex: 1; padding: 12px 16px; border-radius: 24px;
+            border: 1px solid #ddd; font-size: 16px;
         }
-        #userInput:focus {
-            border-color: #4b6cb7;
-            box-shadow: 0 0 0 2px rgba(75, 108, 183, 0.2);
-        }
-        button {
-            background: #4b6cb7; color: white; border: none; border-radius: 24px;
-            padding: 12px 24px; cursor: pointer; font-size: 16px; font-weight: 600;
-            transition: background 0.3s, transform 0.2s;
-        }
-        button:hover { background: #3a5999; transform: translateY(-2px); }
-        button:active { transform: translateY(0); }
-        button:disabled { background: #ccc; cursor: not-allowed; transform: none; }
         .typing-indicator {
-            align-self: flex-start; background: #e8ebf0; color: #666;
-            padding: 12px 18px; border-radius: 18px; display: none;
-        }
-        .typing-indicator span {
-            display: inline-block; width: 8px; height: 8px; background: #999;
-            border-radius: 50%; margin: 0 2px; animation: bounce 1.3s infinite;
-        }
-        .typing-indicator span:nth-child(2) { animation-delay: 0.15s; }
-        .typing-indicator span:nth-child(3) { animation-delay: 0.3s; }
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
-        }
-        .timestamp {
-            font-size: 11px; opacity: 0.6; margin-top: 5px; text-align: right;
-        }
-        @media (max-width: 600px) {
-            .container { height: 95vh; border-radius: 0; }
-            .message { max-width: 90%; }
-            h1 { font-size: 22px; }
-            button { padding: 12px 16px; }
+            display: none;
+            align-self: flex-start; background: #e8ebf0;
+            padding: 12px 18px; border-radius: 18px;
         }
     </style>
 </head>
+
 <body>
-    <div class="container">
-        <header>
-            <h1> JARVIS Chatbot</h1>
-            <div class="status" id="status">Conectando à API...</div>
-        </header>
+<div class="container">
+    <header>
+        <h1>JARVIS Chatbot - Tipcar</h1>
+        <div class="status">Conectado</div>
 
-        <div class="chatbox" id="chatbox">
-            <div class="message system-message">
-                 Olá, sou o JARVIS. Como posso ajudar você hoje?
-            </div>
+        <div id="quickButtons" style="margin-top: 15px; display:flex; flex-wrap:wrap; gap:10px; justify-content:center;">
+            <button class="quick-btn" onclick="handleQuickButton('perfil')">Como criar um perfil de motorista no Tipcar?</button>
+            <button class="quick-btn" onclick="handleQuickButton('participar')">Quem pode participar do Tipcar?</button>
+            <button class="quick-btn" onclick="handleQuickButton('beneficios')">Quais são os benefícios que posso adquirir no Tipcar?</button>
+            <button class="quick-btn" onclick="handleQuickButton('dificuldade')">Estou com dificuldades de navegação</button>
         </div>
+    </header>
 
-        <div class="typing-indicator" id="typingIndicator">
-            JARVIS está digitando <span></span><span></span><span></span>
-        </div>
-
-        <div class="input-area">
-            <input type="text" id="userInput" placeholder="Digite sua mensagem..." autocomplete="off" />
-            <button id="sendButton" onclick="sendMessage()">Enviar</button>
+    <div class="chatbox" id="chatbox">
+        <div class="message system-message">
+            Olá, sou o JARVIS. Como posso ajudar você hoje?
         </div>
     </div>
 
-    <script>
-        const API_TOKEN = "flp_01MXYcyc8WKDmSqEdJgw39VUFkoM1AYIm0HJXkSCNQoae";
-        const API_URL = "https://api.friendli.ai/dedicated/v1/chat/completions";
-        const MODEL_ID = "depu7cgegxdxehg"; // ID do modelo
+    <div class="typing-indicator" id="typingIndicator">
+        JARVIS está digitando...
+    </div>
 
-        const chatbox = document.getElementById('chatbox');
-        const userInput = document.getElementById('userInput');
-        const sendButton = document.getElementById('sendButton');
-        const typingIndicator = document.getElementById('typingIndicator');
-        const status = document.getElementById('status');
+    <div id="subButtons" style="display:none; margin:10px 0; text-align:center;">
+        <button class="quick-btn" onclick="handleSubButton('interface')">Dificuldade na interface</button>
+        <button class="quick-btn" onclick="handleSubButton('carona')">Imprevisto com a carona</button>
+    </div>
 
-        
-        const localAnswers = {
-        
-            "olá": "Olá! Como posso ajudar você hoje?",
-            "tudo bem?": "Estou ótimo, obrigado por perguntar! E você?",
-            "qual seu nome?": "Eu sou o JARVIS, seu assistente virtual.",
-            "o que você pode fazer?": "Posso responder perguntas básicas e também buscar respostas avançadas na API.",
-            "quem criou você?": "Fui criado pelo André, com um pouco de ajuda do ChatGPT!",
-            "adeus": "Até logo! Foi bom conversar com você.",
-            "qual é a capital do brasil?": "A capital do Brasil é Brasília.",
-            "me conte uma piada": "Por que o programador confunde Halloween com Natal? Porque OCT 31 == DEC 25!",
-            "como está o tempo?": "Desculpe, ainda não sei a previsão do tempo, mas posso te ajudar em outras coisas!",
-        };
+    <div class="input-area">
+        <input type="text" id="userInput" placeholder="Digite sua mensagem..." autocomplete="off"/>
+        <button onclick="sendMessage()">Enviar</button>
+    </div>
+</div>
 
-       
-        function getLocalAnswer(question) {
-            const cleaned = question.toLowerCase().trim();
-            if (cleaned in localAnswers) {
-                return localAnswers[cleaned];
-            }
-            return null;
+<script>
+
+
+    // =====================================================
+    // 🔵 BASE DE RESPOSTAS LOCAIS
+    // =====================================================
+
+    const quickResponses = {
+        perfil: "Para criar um perfil de motorista, basta fazer login como motorista, informar sua idade e cadastrar sua CNH válida.",
+        participar: "Todos podem participar do Tipcar, seja como motorista ou passageiro.",
+        beneficios: "Ao usar o Tipcar, você recebe benefícios como vales de lojas parceiras e brindes exibidos no seu perfil.",
+        dificuldade: "Claro, vou te ajudar! Escolha uma das opções abaixo:"
+    };
+
+    const subResponses = {
+        interface: "Na interface do Tipcar, você encontra botões como: Início, Minhas Caronas, Perfil, Ajuda e Configurações.",
+        carona: "Se estiver com problemas na carona, recomendamos enviar mensagem diretamente ao motorista."
+    };
+
+    // =====================================================
+    // 🔵 MANIPULAÇÃO DE BOTÕES RÁPIDOS
+    // =====================================================
+
+    function handleQuickButton(type) {
+        const btn = document.querySelector(`[onclick="handleQuickButton('${type}')"]`);
+        addMessage(btn.innerText, "user");
+
+        if (type === "dificuldade") {
+            addMessage(quickResponses.dificuldade, "bot");
+            document.getElementById("subButtons").style.display = "block";
+            return;
         }
 
-        async function checkAPIStatus() {
-            try {
-                status.textContent = "Verificando conexão com modelo...";
-                const testPayload = {
-                    model: MODEL_ID,
-                    messages: [{ role: "user", content: "Olá" }]
-                };
-                const response = await fetch(API_URL, {
-                    method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${API_TOKEN}`,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(testPayload)
-                });
+        addMessage(quickResponses[type], "bot");
+    }
 
-                if (response.ok) {
-                    status.textContent = " Conectado ao modelo Mistral!";
-                    status.style.color = "#4caf50";
-                } else {
-                    status.textContent = " Nosso modelo está indisponível no momento";
-                    status.style.color = "#f44336";
-                }
-            } catch (error) {
-                status.textContent = "⚠ Erro de conexão";
-                status.style.color = "#f44336";
-            }
-        }
+    function handleSubButton(type) {
+        const btn = document.querySelector(`[onclick="handleSubButton('${type}')"]`);
+        addMessage(btn.innerText, "user");
 
-        function addMessage(text, type) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${type}-message`;
-            const now = new Date();
-            const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            messageDiv.innerHTML = `${text}<div class="timestamp">${timeString}</div>`;
-            chatbox.appendChild(messageDiv);
-            chatbox.scrollTop = chatbox.scrollHeight;
-        }
+        document.getElementById("subButtons").style.display = "none";
+        addMessage(subResponses[type], "bot");
+    }
 
-        function showTypingIndicator(show) {
-            typingIndicator.style.display = show ? 'block' : 'none';
-            sendButton.disabled = show;
-            if (show) chatbox.scrollTop = chatbox.scrollHeight;
-        }
+    // =====================================================
+    // 🔵 FUNÇÃO DE ENVIO PARA O BACKEND (STREAMING)
+    // =====================================================
 
-        async function queryAPI(prompt) {
-            const payload = {
-                model: MODEL_ID,
-                messages: [{ role: "user", content: prompt }]
-            };
-
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${API_TOKEN}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            });
-
-            const data = await response.json();
-
-            if (data.choices && data.choices.length > 0) {
-                return data.choices[0].message.content;
-            }
-
-            return "Desculpe, não consegui entender sua pergunta.";
-        }
-
-        async function sendMessage() {
-            const message = userInput.value.trim();
-            if (!message) return;
-
-            if (message.toLowerCase() === 'sair') {
-                addMessage('👋 Até mais! Encerrando conversa.', 'system');
-                userInput.disabled = true;
-                sendButton.disabled = true;
-                status.textContent = "Conversa encerrada";
-                status.style.color = "#999";
-                return;
-            }
-
-            addMessage(message, 'user');
-            userInput.value = '';
-            showTypingIndicator(true);
-
-         
-            const localResponse = getLocalAnswer(message);
-
-            if (localResponse) {
-              
-                addMessage(localResponse, 'bot');
-                showTypingIndicator(false);
-            } else {
-               
-                try {
-                    const apiResponse = await queryAPI(message);
-                    addMessage(apiResponse, 'bot');
-                } catch (error) {
-                    //fallbavk
-                    addMessage("⚠️ Desculpe, não consegui conectar ao servidor de respostas. Por favor, tente novamente mais tarde.", 'error');
-                } finally {
-                    showTypingIndicator(false);
-                }
-            }
-        }
-
-        userInput.addEventListener('keypress', e => {
-            if (e.key === 'Enter') sendMessage();
+    async function sendToBackend(message, onToken) {
+    try {
+        const response = await fetch("http://localhost:3000/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message })
         });
 
-        window.addEventListener('load', () => {
-            userInput.focus();
-            checkAPIStatus();
+        const data = await response.json(); // lê JSON
+        onToken(data.response); // envia para o chat
+    } catch (err) {
+        console.error("Erro ao se comunicar com o backend:", err);
+        onToken("Desculpe, ocorreu um erro na resposta do servidor.");
+    }
+}
+
+
+    // =====================================================
+    // 🔵 ENVIO DE MENSAGEM
+    // =====================================================
+
+    async function sendMessage() {
+        const input = document.getElementById("userInput");
+        const text = input.value.trim();
+        if (!text) return;
+
+        addMessage(text, "user");
+        input.value = "";
+
+        const typingIndicator = document.getElementById("typingIndicator");
+        typingIndicator.style.display = "block";
+
+        const chatBox = document.getElementById("chatbox");
+
+        // Cria a mensagem do bot
+        const botMsg = document.createElement("div");
+        botMsg.classList.add("message", "bot-message");
+        chatBox.appendChild(botMsg);
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        // Envia ao backend e atualiza em tempo real
+        await sendToBackend(text, (token) => {
+            botMsg.innerText += token;
+            chatBox.scrollTop = chatBox.scrollHeight;
         });
-    </script>
+
+        typingIndicator.style.display = "none";
+    }
+
+    // =====================================================
+    // 🔵 FUNÇÃO PARA ADICIONAR MENSAGEM LOCAL
+    // =====================================================
+
+    function addMessage(text, type) {
+        const box = document.getElementById("chatbox");
+        const msg = document.createElement("div");
+        msg.classList.add("message", type === "user" ? "user-message" : "bot-message");
+        msg.innerText = text;
+        box.appendChild(msg);
+        box.scrollTop = box.scrollHeight;
+    }
+
+    // =====================================================
+    // 🔵 TECLA ENTER PARA ENVIAR
+    // =====================================================
+
+    document.getElementById("userInput").addEventListener("keydown", function(e) {
+        if (e.key === "Enter") sendMessage();
+    });
+</script>
+
+
+
 </body>
 </html>
 
