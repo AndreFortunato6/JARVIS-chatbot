@@ -38,33 +38,32 @@ app.get("/api-test", (req, res) => {
     res.json({ ok: true });
 });
 
-// --- ROTA DE CHAT (SSE OU POLLING) ---
 app.post("/chat", async (req, res) => {
+    res.setHeader("Access-Control-Allow-Origin", "https://jarvis-chatbot-2.onrender.com");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+
+    // 🔥 Cabeçalhos do SSE
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+
+    res.flushHeaders();
+
     try {
         const { message } = req.body;
-
-        // Headers SSE
-        res.setHeader("Content-Type", "text/event-stream");
-        res.setHeader("Cache-Control", "no-cache");
-        res.setHeader("Connection", "keep-alive");
-        res.flushHeaders();
 
         const result = await model.generateContentStream({
             contents: [{ role: "user", parts: [{ text: message }] }]
         });
 
-        try {
-            for await (const chunk of result.stream) {
-                const text = chunk.text();
-                if (text) res.write(`data: ${text}\n\n`);
-            }
-            res.write("data: [END]\n\n");
-            res.end();
-        } catch (streamErr) {
-            console.error("Erro no stream:", streamErr);
-            res.write("data: ERRO NO STREAM\n\n");
-            res.end();
+        for await (const chunk of result.stream) {
+            const text = chunk.text();
+            if (text) res.write(`data: ${text}\n\n`);
         }
+
+        res.write("data: [END]\n\n");
+        res.end();
 
     } catch (err) {
         console.error("Erro no /chat:", err);
