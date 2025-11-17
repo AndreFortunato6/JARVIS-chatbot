@@ -2,18 +2,22 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import path from "path";
 
 dotenv.config();
 const app = express();
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 
+// --- SERVIR ARQUIVOS ESTÁTICOS DO FRONT-END ---
+app.use(express.static(path.join(process.cwd(), "public")));
+
 // --- INICIALIZA GEMINI ---
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
 // --- ROTA TESTE ---
-app.get("/", (req, res) => {
+app.get("/api-test", (req, res) => {
   res.json({ ok: true });
 });
 
