@@ -9,13 +9,21 @@ const app = express();
 
 // --- CORS CONFIGURADO PARA FRONT-END ---
 app.use(cors({
-    origin: "https://jarvis-chatbot-2.onrender.com", // substitua pelo seu front-end
+    origin: "https://jarvis-chatbot-2.onrender.com", // seu front-end
     methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type"]
 }));
 
 // --- PARSE JSON ---
 app.use(express.json());
+
+// --- TRATAR PRELIGHT OPTIONS PARA CORS ---
+app.options("/chat", (req, res) => {
+    res.header("Access-Control-Allow-Origin", "https://jarvis-chatbot-2.onrender.com");
+    res.header("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Content-Type");
+    res.sendStatus(204); // resposta vazia para OPTIONS
+});
 
 // --- SERVIR ARQUIVOS ESTÁTICOS ---
 const publicPath = path.join(process.cwd(), "public");
