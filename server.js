@@ -6,11 +6,18 @@ import path from "path";
 
 dotenv.config();
 const app = express();
+
+// --- CORS e JSON ---
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 
 // --- SERVIR ARQUIVOS ESTÁTICOS DO FRONT-END ---
 app.use(express.static(path.join(process.cwd(), "public")));
+
+// --- ROTA DE FALLBACK PARA index.html ---
+app.get("*", (req, res) => {
+  res.sendFile(path.join(process.cwd(), "public", "index.html"));
+});
 
 // --- INICIALIZA GEMINI ---
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -52,4 +59,5 @@ app.post("/chat", async (req, res) => {
 // --- PORTA CORRETA PARA RENDER ---
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Servidor rodando na porta ${PORT}`));
+
 
