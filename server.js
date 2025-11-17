@@ -8,16 +8,12 @@ dotenv.config();
 const app = express();
 
 // --- CORS e JSON ---
-app.use(cors({ origin: "*" }));
+app.use(cors({ origin: "*" })); // Troque "*" pelo domínio do front-end em produção
 app.use(express.json());
 
-// --- SERVIR ARQUIVOS ESTÁTICOS DO FRONT-END ---
-app.use(express.static(path.join(process.cwd(), "public")));
-
-// --- ROTA DE FALLBACK PARA index.html ---
-app.get("*", (req, res) => {
-  res.sendFile(path.join(process.cwd(), "public", "index.html"));
-});
+// --- SERVIR ARQUIVOS ESTÁTICOS ---
+const publicPath = path.join(process.cwd(), "public");
+app.use(express.static(publicPath));
 
 // --- INICIALIZA GEMINI ---
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -33,6 +29,7 @@ app.post("/chat", async (req, res) => {
   try {
     const { message } = req.body;
 
+    // Headers SSE
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
@@ -42,13 +39,19 @@ app.post("/chat", async (req, res) => {
       contents: [{ role: "user", parts: [{ text: message }] }]
     });
 
-    for await (const chunk of result.stream) {
-      const text = chunk.text();
-      if (text) res.write(`data: ${text}\n\n`);
+    try {
+      for await (const chunk of result.stream) {
+        const text = chunk.text();
+        if (text) res.write(`data: ${text}\n\n`);
+      }
+      // Marca o fim da resposta
+      res.write("data: [END]\n\n");
+      res.end();
+    } catch (streamErr) {
+      console.error("Erro no stream:", streamErr);
+      res.write("data: ERRO NO STREAM\n\n");
+      res.end();
     }
-
-    res.write("data: [END]\n\n");
-    res.end();
   } catch (err) {
     console.error("Erro no /chat:", err);
     res.write("data: ERRO NO SERVIDOR\n\n");
@@ -56,7 +59,12 @@ app.post("/chat", async (req, res) => {
   }
 });
 
-// --- PORTA CORRETA PARA RENDER ---
+// --- FALLBACK PARA FRONT-END ---
+app.get("*", (req, res) => {
+  res.sendFile(path.join(publicPath, "index.html"));
+});
+
+// --- INICIAR SERVIDOR ---
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Servidor rodando na porta ${PORT}`));
 
