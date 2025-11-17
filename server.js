@@ -7,8 +7,14 @@ import path from "path";
 dotenv.config();
 const app = express();
 
-// --- CORS e JSON ---
-app.use(cors({ origin: "*" })); // Troque "*" pelo domínio do front-end em produção
+// --- CORS CONFIGURADO PARA FRONT-END ---
+app.use(cors({
+    origin: "https://jarvis-chatbot-2.onrender.com", // substitua pelo seu front-end
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type"]
+}));
+
+// --- PARSE JSON ---
 app.use(express.json());
 
 // --- SERVIR ARQUIVOS ESTÁTICOS ---
@@ -21,51 +27,50 @@ const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
 // --- ROTA TESTE ---
 app.get("/api-test", (req, res) => {
-  res.json({ ok: true });
+    res.json({ ok: true });
 });
 
-// --- ROTA DE CHAT (SSE) ---
+// --- ROTA DE CHAT (SSE OU POLLING) ---
 app.post("/chat", async (req, res) => {
-  try {
-    const { message } = req.body;
-
-    // Headers SSE
-    res.setHeader("Content-Type", "text/event-stream");
-    res.setHeader("Cache-Control", "no-cache");
-    res.setHeader("Connection", "keep-alive");
-    res.flushHeaders();
-
-    const result = await model.generateContentStream({
-      contents: [{ role: "user", parts: [{ text: message }] }]
-    });
-
     try {
-      for await (const chunk of result.stream) {
-        const text = chunk.text();
-        if (text) res.write(`data: ${text}\n\n`);
-      }
-      // Marca o fim da resposta
-      res.write("data: [END]\n\n");
-      res.end();
-    } catch (streamErr) {
-      console.error("Erro no stream:", streamErr);
-      res.write("data: ERRO NO STREAM\n\n");
-      res.end();
+        const { message } = req.body;
+
+        // Headers SSE
+        res.setHeader("Content-Type", "text/event-stream");
+        res.setHeader("Cache-Control", "no-cache");
+        res.setHeader("Connection", "keep-alive");
+        res.flushHeaders();
+
+        const result = await model.generateContentStream({
+            contents: [{ role: "user", parts: [{ text: message }] }]
+        });
+
+        try {
+            for await (const chunk of result.stream) {
+                const text = chunk.text();
+                if (text) res.write(`data: ${text}\n\n`);
+            }
+            res.write("data: [END]\n\n");
+            res.end();
+        } catch (streamErr) {
+            console.error("Erro no stream:", streamErr);
+            res.write("data: ERRO NO STREAM\n\n");
+            res.end();
+        }
+
+    } catch (err) {
+        console.error("Erro no /chat:", err);
+        res.write("data: ERRO NO SERVIDOR\n\n");
+        res.end();
     }
-  } catch (err) {
-    console.error("Erro no /chat:", err);
-    res.write("data: ERRO NO SERVIDOR\n\n");
-    res.end();
-  }
 });
 
 // --- FALLBACK PARA FRONT-END ---
 app.get("*", (req, res) => {
-  res.sendFile(path.join(publicPath, "index.html"));
+    res.sendFile(path.join(publicPath, "index.html"));
 });
 
 // --- INICIAR SERVIDOR ---
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Servidor rodando na porta ${PORT}`));
-
 
