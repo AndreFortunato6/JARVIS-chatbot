@@ -132,7 +132,6 @@
 
 <script>
 
-
     // =====================================================
     // 🔵 BASE DE RESPOSTAS LOCAIS
     // =====================================================
@@ -175,25 +174,45 @@
     }
 
     // =====================================================
-    // 🔵 FUNÇÃO DE ENVIO PARA O BACKEND (STREAMING)
+    // 🔵 FUNÇÃO REAL DE STREAMING PARA O BACKEND
     // =====================================================
 
     async function sendToBackend(message, onToken) {
-    try {
-        const response = await fetch("http://localhost:3000/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message })
-        });
+        try {
+            const response = await fetch("http://localhost:3000/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message })
+            });
 
-        const data = await response.json(); // lê JSON
-        onToken(data.response); // envia para o chat
-    } catch (err) {
-        console.error("Erro ao se comunicar com o backend:", err);
-        onToken("Desculpe, ocorreu um erro na resposta do servidor.");
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = "";
+
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value);
+                const parts = buffer.split("\n\n");
+                buffer = parts.pop();
+
+                for (const part of parts) {
+                    if (!part.startsWith("data: ")) continue;
+
+                    const token = part.replace("data: ", "").trim();
+
+                    if (token === "[END]") return;
+
+                    onToken(token);
+                }
+            }
+
+        } catch (err) {
+            console.error("Erro ao se comunicar com o backend:", err);
+            onToken("Desculpe, ocorreu um erro na resposta do servidor.");
+        }
     }
-}
-
 
     // =====================================================
     // 🔵 ENVIO DE MENSAGEM
@@ -212,13 +231,11 @@
 
         const chatBox = document.getElementById("chatbox");
 
-        // Cria a mensagem do bot
         const botMsg = document.createElement("div");
         botMsg.classList.add("message", "bot-message");
         chatBox.appendChild(botMsg);
         chatBox.scrollTop = chatBox.scrollHeight;
 
-        // Envia ao backend e atualiza em tempo real
         await sendToBackend(text, (token) => {
             botMsg.innerText += token;
             chatBox.scrollTop = chatBox.scrollHeight;
@@ -228,7 +245,7 @@
     }
 
     // =====================================================
-    // 🔵 FUNÇÃO PARA ADICIONAR MENSAGEM LOCAL
+    // 🔵 ADICIONAR MENSAGEM
     // =====================================================
 
     function addMessage(text, type) {
@@ -241,13 +258,15 @@
     }
 
     // =====================================================
-    // 🔵 TECLA ENTER PARA ENVIAR
+    // 🔵 ENTER PARA ENVIAR
     // =====================================================
 
     document.getElementById("userInput").addEventListener("keydown", function(e) {
         if (e.key === "Enter") sendMessage();
     });
+
 </script>
+
 
 
 
